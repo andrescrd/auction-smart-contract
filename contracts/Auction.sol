@@ -16,6 +16,7 @@ contract Auction{
 
     mapping(address => uint) public bids;
     uint bidIncrement;
+    uint minBid;
 
     constructor(){
         owner = payable(msg.sender);
@@ -24,6 +25,7 @@ contract Auction{
         endBlock = block.number + ((60 * 60 * 24 * 7) / 15);
         ipfsHash = "";
         bidIncrement = 100;
+        minBid = 100;
     }
 
     modifier onlyOwner(){
@@ -41,8 +43,38 @@ contract Auction{
         _;
     }
 
-    modifier afterEnd(){
+    modifier beforeEnd(){
         require(block.number <= endBlock);
         _;
+    }
+
+    function cancelAuction() public onlyOwner{
+        auctionState = State.Cancelled;
+    }
+
+    function placeBid() public payable notOwner afterStart beforeEnd {
+        require(auctionState == State.Running);
+        require(msg.value >= minBid);
+
+        uint currentBid = bids[msg.sender] + msg.value;
+
+        require(currentBid > highestBindingBid);
+
+        bids[msg.sender] = currentBid;
+
+        if(currentBid > bids[highestBidder]){
+            highestBindingBid = min(currentBid, bids[highestBidder] + bidIncrement);
+            highestBidder = payable(msg.sender);
+        } else {
+            highestBindingBid = min(currentBid + bidIncrement, bids[highestBidder]);
+        }
+    }
+
+    function min(uint a, uint b) pure internal returns (uint){
+        if(a < b){
+            return a;
+        } else {
+            return b;
+        }   
     }
 }
