@@ -18,8 +18,8 @@ contract Auction{
     uint bidIncrement;
     uint minBid;
 
-    constructor(){
-        owner = payable(msg.sender);
+    constructor(address _owner){
+        owner = payable(_owner);
         auctionState = State.Running;
         startBlock = block.number;
         endBlock = block.number + ((60 * 60 * 24 * 7) / 15);
