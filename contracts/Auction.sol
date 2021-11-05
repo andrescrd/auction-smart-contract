@@ -87,9 +87,10 @@ contract Auction{
             } else {
                  recipient = payable(msg.sender);
                 value =  bids[highestBidder];
-            }             
+            }           
         }
-
+        
+        bids[recipient]= 0;
         recipient.transfer(value);
     }
 
